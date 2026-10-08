@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YULWON MISSION 이월드 에너토피아</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap');
+    body {
+      font-family: 'Pretendard', sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+    .glass-card {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .glow-effect {
+      box-shadow: 0 0 25px rgba(59, 130, 246, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 flex flex-col items-center justify-start p-4">
+
+  <!-- JavaScript 설정 영역 -->
+  <script>
+    // ==========================================
+    // ⚙️ 선생님 설정 영역
+    // ==========================================
+    // Apps Script 배포 후 받은 웹 앱 URL을 아래 큰따옴표 안에 넣으세요!
+    const GOOGLE_SHEET_URL = "https://script.google.com/a/macros/dge.go.kr/s/AKfycbwkLO1yVWs83Fp10GTR_WeedwKh5_Y-SF7POAcOop19uANwkPZQSyR6F4PWDDrrE3Yf/exec";
+
+    // 퀴즈 데이터 및 정답 설정
+    const MISSION_DATA = {
+      title: "YULWON 이월드 에너토피아 MISSION",
+      stages: [
+        {
+          id: 1,
+          name: "1단계: 메가스윙 360",
+          subtitle: "최고 높이와 최저 높이의 비밀",
+          badge: "메가스윙 360",
+          desc: "메가스윙이 가장 높은 곳(최고점)에 도달해 멈추었을 때 위치 에너지가 100J이었습니다.<br><br>공기 저항과 마찰을 무시할 때, <strong>가장 아래(최저점)를 지나칠 때의 운동 에너지</strong>는 몇 J일까요? (숫자만 입력)",
+          hint: "역학적 에너지 보존 법칙! 위치 에너지 감소량 = 운동 에너지 증가량",
+          answer: "100"
+        },
+        {
+          id: 2,
+          name: "2단계: 카멜백 코스터",
+          subtitle: "속력 변화와 에너지 전환",
+          badge: "카멜백 코스터",
+          desc: "열차가 높은 곳에서 빠른 속도로 아래로 낙하하고 있습니다.<br><br>높이가 낮아지면서 <strong>줄어드는 에너지의 명칭</strong>은 무엇일까요? (두 글자 한글 입력)",
+          hint: "높이와 관련된 에너지의 이름입니다.",
+          answer: "위치"
+        },
+        {
+          id: 3,
+          name: "3단계: 부메랑 코스터",
+          subtitle: "역학적 에너지 보존의 완성",
+          badge: "부메랑 코스터",
+          desc: "마찰이나 공기 저항이 전혀 없는 이상적인 조건이라면, 운동 에너지와 위치 에너지를 합한 <strong>'역학적 에너지'의 상태</strong>는 어떻게 될까요? (두 글자 한글 입력)",
+          hint: "변하지 않고 일정하게 유지되는 것을 뜻하는 단어입니다.",
+          answer: "보존"
+        }
+      ]
+    };
+  </script>
+
+  <!-- 메인 컨테이너 -->
+  <div class="w-full max-w-md mx-auto space-y-6">
+
+    <!-- 헤더 -->
+    <header class="text-center pt-6 pb-2">
+      <div class="inline-block bg-blue-600/30 text-blue-400 text-xs font-bold px-3 py-1 rounded-full border border-blue-500/30 mb-2">
+        <i class="fa-solid fa-atom mr-1"></i> 중3 과학 역학적 에너지
+      </div>
+    <h1 class="text-2xl font-extrabold leading-tight">
+  <span class="text-sky-400 block">YULWON MISSION</span>
+  <span class="text-amber-300 block text-xl mt-1">이월드 에너토피아</span>
+</h1>
+      <p class="text-slate-400 text-sm mt-1">3단계 문제를 풀고 인증샷을 제출하세요!</p>
+    </header>
+
+    <!-- [STEP 0] 학번 / 이름 입력 화면 -->
+    <div id="step-user-info" class="glass-card rounded-2xl p-6 glow-effect space-y-4">
+      <h2 class="text-lg font-bold text-white flex items-center">
+        <i class="fa-solid fa-id-card text-blue-400 mr-2"></i> 대원 정보 입력
+      </h2>
+      <p class="text-xs text-slate-300">선생님 확인 및 상점 지급을 위해 정확히 입력해 주세요.</p>
+      
+      <div class="space-y-3 pt-2">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">학번 (예: 30105)</label>
+          <input type="number" id="student-id" placeholder="학번 5자리 입력" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-sm" />
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">이름</label>
+          <input type="text" id="student-name" placeholder="이름 입력" class="w-full bg-slate-800/80 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-sm" />
+        </div>
+      </div>
+
+      <button onclick="startMission()" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200 mt-2 flex items-center justify-center">
+        <span>미션 시작하기</span>
+        <i class="fa-solid fa-arrow-right ml-2"></i>
+      </button>
+    </div>
+
+    <!-- [STEP 1~3] 퀴즈 영역 (기본 숨김) -->
+    <div id="quiz-container" class="hidden space-y-6">
+      
+      <!-- 진행도 바 -->
+      <div class="glass-card rounded-xl p-4 flex items-center justify-between">
+        <div class="text-xs text-slate-400">
+          대원: <span id="display-user" class="text-white font-bold"></span>
+        </div>
+        <div class="flex items-center space-x-1.5" id="progress-dots">
+          <div id="dot-1" class="w-3 h-3 rounded-full bg-slate-700"></div>
+          <div id="dot-2" class="w-3 h-3 rounded-full bg-slate-700"></div>
+          <div id="dot-3" class="w-3 h-3 rounded-full bg-slate-700"></div>
+        </div>
+      </div>
+
+      <!-- 퀴즈 카드가 들어갈 영역 -->
+      <div id="quiz-card-wrapper"></div>
+    </div>
+
+    <!-- [STEP 4] 최종 성공 및 인증샷 제출 화면 (기본 숨김) -->
+    <div id="success-container" class="hidden glass-card rounded-2xl p-6 glow-effect text-center space-y-5">
+      <div class="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl border border-emerald-500/40">
+        <i class="fa-solid fa-trophy"></i>
+      </div>
+      
+      <div>
+        <h2 class="text-2xl font-extrabold text-emerald-400">MISSION COMPLETE!</h2>
+        <p class="text-xs text-slate-300 mt-1">모든 암호를 해독하였습니다!</p>
+      </div>
+
+      <!-- 보너스 인증샷 업로드 영역 -->
+      <div class="bg-slate-800/60 rounded-xl p-4 border border-slate-700/60 text-left space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-yellow-400 flex items-center">
+            <i class="fa-solid fa-star mr-1"></i> 보너스 상점 미션
+          </span>
+          <span class="text-[10px] bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded border border-yellow-500/30">선택사항</span>
+        </div>
+        <p class="text-xs text-slate-300">놀이기구 움직임을 포착한 팀 인증샷을 첨부해 주세요!</p>
+        
+        <input type="file" id="photo-input" accept="image/*" capture="environment" class="hidden" onchange="handleFileSelect(event)" />
+        
+        <button onclick="document.getElementById('photo-input').click()" class="w-full bg-slate-700/80 hover:bg-slate-700 border border-dashed border-slate-500 text-slate-200 text-xs py-3 rounded-lg flex items-center justify-center space-x-2 transition">
+          <i class="fa-solid fa-camera text-base"></i>
+          <span id="photo-btn-text">사진 촬영 또는 앨범 선택</span>
+        </button>
+
+        <!-- 이미지 미리보기 -->
+        <div id="photo-preview-box" class="hidden relative rounded-lg overflow-hidden border border-slate-600">
+          <img id="photo-preview" src="" alt="인증샷" class="w-full h-40 object-cover" />
+          <div class="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow">
+            첨부 완료
+          </div>
+        </div>
+      </div>
+
+      <!-- 구글 시트 데이터 전송 버튼 -->
+      <button id="submit-btn" onclick="submitToGoogleSheet()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3.5 rounded-xl shadow-lg transition duration-200 flex items-center justify-center">
+        <i class="fa-solid fa-paper-plane mr-2"></i>
+        <span>선생님께 기록 제출하기</span>
+      </button>
+
+      <!-- 결과 상태 안내 메시지 -->
+      <div id="submission-status" class="text-xs text-slate-400"></div>
+    </div>
+
+  </div>
+
+  <!-- 앱 동작 스크립트 -->
+  <script>
+    let currentUser = { id: "", name: "" };
+    let currentStage = 1;
+    let selectedPhotoBase64 = "";
+
+    // 1. 미션 시작
+    function startMission() {
+      const idInput = document.getElementById("student-id").value.trim();
+      const nameInput = document.getElementById("student-name").value.trim();
+
+      if (!idInput || !nameInput) {
+        alert("학번과 이름을 모두 입력해 주세요!");
+        return;
+      }
+
+      currentUser.id = idInput;
+      currentUser.name = nameInput;
+
+      document.getElementById("step-user-info").classList.add("hidden");
+      document.getElementById("quiz-container").classList.remove("hidden");
+      document.getElementById("display-user").innerText = `${currentUser.id} ${currentUser.name}`;
+
+      renderStage(1);
+    }
+
+    // 2. 퀴즈 화면 렌더링
+    function renderStage(stageNum) {
+      currentStage = stageNum;
+      updateProgressDots(stageNum);
+
+      const stageData = MISSION_DATA.stages.find(s => s.id === stageNum);
+      const wrapper = document.getElementById("quiz-card-wrapper");
+
+      wrapper.innerHTML = `
+        <div class="glass-card rounded-2xl p-6 glow-effect space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="bg-blue-500/20 text-blue-300 text-xs font-bold px-2.5 py-1 rounded-md border border-blue-500/30">
+              ${stageData.badge}
+            </span>
+            <span class="text-xs text-slate-400 font-bold">${stageNum} / 3 STAGE</span>
+          </div>
+
+          <div>
+            <h3 class="text-lg font-bold text-white">${stageData.name}</h3>
+            <p class="text-xs text-slate-400 mt-0.5">${stageData.subtitle}</p>
+          </div>
+
+          <div class="bg-slate-800/80 rounded-xl p-4 border border-slate-700/80 text-sm leading-relaxed text-slate-200">
+            ${stageData.desc}
+          </div>
+
+          <!-- 힌트 버튼 & 박스 -->
+          <div>
+            <button onclick="toggleHint()" class="text-xs text-amber-400 hover:text-amber-300 flex items-center space-x-1">
+              <i class="fa-regular fa-lightbulb"></i>
+              <span>힌트 보기</span>
+            </button>
+            <div id="hint-box" class="hidden mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-200">
+              💡 ${stageData.hint}
+            </div>
+          </div>
+
+          <!-- 정답 입력창 -->
+          <div class="pt-2">
+            <input type="text" id="answer-input" placeholder="정답 암호 입력" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 text-center font-bold tracking-wider text-base mb-3" />
+            <button onclick="checkAnswer(${stageNum})" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg flex items-center justify-center">
+              <span>암호 해독 확인</span>
+              <i class="fa-solid fa-key ml-2"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // 힌트 토글
+    function toggleHint() {
+      const hintBox = document.getElementById("hint-box");
+      hintBox.classList.toggle("hidden");
+    }
+
+    // 정답 확인
+    function checkAnswer(stageNum) {
+      const inputVal = document.getElementById("answer-input").value.trim().replace(/\s+/g, '');
+      const stageData = MISSION_DATA.stages.find(s => s.id === stageNum);
+
+      if (inputVal === stageData.answer) {
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+
+        if (stageNum < 3) {
+          alert(`🎉 ${stageNum}단계 암호 해독 성공! 다음 단계로 이동합니다.`);
+          renderStage(stageNum + 1);
+        } else {
+          // 3단계 모두 통과
+          document.getElementById("quiz-container").classList.add("hidden");
+          document.getElementById("success-container").classList.remove("hidden");
+          confetti({ particleCount: 100, spread: 100, origin: { y: 0.6 } });
+        }
+      } else {
+        alert("❌ 암호가 틀렸습니다! 다시 생각해 보세요.");
+      }
+    }
+
+    // 진행도 표시 점 업데이트
+    function updateProgressDots(stageNum) {
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById(`dot-${i}`);
+        if (i < stageNum) {
+          dot.className = "w-3 h-3 rounded-full bg-emerald-400";
+        } else if (i === stageNum) {
+          dot.className = "w-3 h-3 rounded-full bg-blue-500 animate-pulse";
+        } else {
+          dot.className = "w-3 h-3 rounded-full bg-slate-700";
+        }
+      }
+    }
+
+    // 이미지 선택 처리 및 Base64 변환
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        selectedPhotoBase64 = e.target.result;
+        document.getElementById("photo-preview").src = selectedPhotoBase64;
+        document.getElementById("photo-preview-box").classList.remove("hidden");
+        document.getElementById("photo-btn-text").innerText = "사진 변경하기";
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 구글 시트로 최종 제출
+    function submitToGoogleSheet() {
+      if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("여기에_구글")) {
+        alert("선생님 설정 오류: GOOGLE_SHEET_URL이 설정되지 않았습니다. 선생님께 문의하세요.");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submit-btn");
+      const statusText = document.getElementById("submission-status");
+
+      submitBtn.disabled = true;
+      submitBtn.classList.add("opacity-50", "cursor-not-allowed");
+      statusText.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 구글 시트로 제출 기록을 전송 중입니다...';
+
+      const payload = {
+        studentId: currentUser.id,
+        studentName: currentUser.name,
+        status: "3단계 완료",
+        photoData: selectedPhotoBase64
+      };
+
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+      .then(() => {
+        statusText.className = "text-xs text-emerald-400 font-bold mt-2";
+        statusText.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> 선생님 구글 시트에 제출이 완료되었습니다!';
+        alert("성공적으로 기록이 제출되었습니다!");
+      })
+      .catch((err) => {
+        statusText.className = "text-xs text-rose-400 font-bold mt-2";
+        statusText.innerHTML = '제출 중 오류가 발생했습니다. 다시 시도해 주세요.';
+        submitBtn.disabled = false;
+        submitBtn.classList.remove("opacity-50", "cursor-not-allowed");
+      });
+    }
+  </script>
+</body>
+</html>
